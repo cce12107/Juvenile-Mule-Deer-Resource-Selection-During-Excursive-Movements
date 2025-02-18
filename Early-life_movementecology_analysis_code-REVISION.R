@@ -1,6 +1,6 @@
 # Early-life movement ecology of a cervid: Implications for Chronic Wasting Disease Management Analysis Code
 # Calvin C. Ellis
-# 12/17/2024
+# 02/18/2025
 
 set.seed(4432)
 
@@ -56,69 +56,101 @@ for (i in 1:length(id)) {
 #Step-selection Function Models
 
 library(survival)
+library(MuMIn)
 
-# create a blank list for model selection
-mod.sel <- list()
+### Males During Excursions ###
+male.exc.global = clogit(#response variable
+  case ~ 
+    #movement covariates
+    sl_ + log_sl_ + cos_ta_ +
+    #landscape covariates
+    Elevation + Distance.to.Herbaceous + Distance.to.Shrub + Distance.to.Water + Slope +
+    #stratum
+    strata(step_id_) + 
+    #cluster around individual
+    cluster(id),
+  method = "approximate", data=male.excursion.df, model=TRUE)
 
-# Global 3-way
-mod.sel[[1]] <- clogit(#response variable
-                       case ~ 
-                       #movement covariates
-                       steplength + log_sl + cos_ta +
-                       #three-way interaction
-                       Status*Sex*(Elevation + Distance.to.Herbaceous + Distance.to.Shrub + Distance.to.Water + Slope) +
-                       #stratum
-                       strata(step_id) + 
-                       #cluster around individual
-                       cluster(animal_id),
-                       method = "approximate", data=all.data, model=TRUE)
+#testing all combinations of models while including movement covariates in every iteration
 
-# 2 way status only
-mod.sel[[2]] <- clogit(#response variable
-                       case ~ 
-                       #movement covariates
-                       steplength + log_sl + cos_ta +   
-                       #two-way interaction with landscape familiarity status
-                       Status*(Elevation + Distance.to.Herbaceous + Distance.to.Shrub + Distance.to.Water + Slope) +
-                       #stratum
-                       strata(step_id) + 
-                       #cluster around individual
-                       cluster(animal_id),
-                       method = "approximate", data=all.data, model=TRUE)
+options(na.action = 'na.fail')
+male.exc.dredge <- dredge(male.exc.global,
+                      subset = sl_ & log_sl_ & cos_ta_ & 
+                        (Elevation | Distance.to.Herbaceous | Distance.to.Shrub | 
+                           Distance.to.Water | Slope))
 
-# 2 way sex 
-mod.sel[[3]] <- clogit(#response variable
-                       case ~ 
-                       #movement covariates
-                       steplength + log_sl + cos_ta +
-                       #two-way interaction with sex
-                       Sex*(Elevation + Distance.to.Herbaceous + Distance.to.Shrub + Distance.to.Water + Slope) +
-                       #stratum
-                       strata(step_id) + 
-                       #cluster around individual
-                       cluster(animal_id),
-                       method = "approximate", data=all.data, model=TRUE)
+male.exc.model.results <- as.data.frame(male.exc.dredge)
+male.exc.top = subset(male.exc.dredge, delta < 2) #extract competing models
 
+### Males Within Range ###
+male.natal.global = clogit(#response variable
+  case ~ 
+    #movement covariates
+    sl_ + log_sl_ + cos_ta_ +
+    #landscape covariates
+    Elevation + Distance.to.Herbaceous + Distance.to.Shrub + Distance.to.Water + Slope +
+    #stratum
+    strata(step_id_) + 
+    #cluster around individual
+    cluster(id),
+  method = "approximate", data=male.natal.df, model=TRUE)
 
-# null 
-mod.sel[[4]] <- clogit(#response variable
-                       case ~ 
-                       #null intercept
-                       1 + 
-                       #stratum
-                       strata(step_id),
-                       #cluster around individual
-                       cluster(animal_id),
-                       method = "approximate", data = all.data, model = TRUE) 
+#testing all combinations of models while including movement covariates in every iteration
 
+options(na.action = 'na.fail')
+male.natal.dredge <- dredge(male.natal.global,
+                      subset = sl_ & log_sl_ & cos_ta_ & 
+                        (Elevation | Distance.to.Herbaceous | Distance.to.Shrub | 
+                           Distance.to.Water | Slope))
 
-# Name models
-Model.names <- c("global", "global_subset_1", "global_subset_2", "null")
+male.natal.model.results <- as.data.frame(male.natal.dredge)
+male.natal.top = subset(male.natal.dredge, delta < 2) #extract competing models
 
+### Females During Excursions ###
+female.exc.global = clogit(#response variable
+  case ~ 
+    #movement covariates
+    sl_ + log_sl_ + cos_ta_ +
+    #landscape covariates
+    Elevation + Distance.to.Herbaceous + Distance.to.Shrub + Distance.to.Water + Slope +
+    #stratum
+    strata(step_id_) + 
+    #cluster around individual
+    cluster(id),
+  method = "approximate", data=female.excursion.df, model=TRUE)
+
+#testing all combinations of models while including movement covariates in every iteration
+
+options(na.action = 'na.fail')
+female.exc.dredge <- dredge(female.exc.global,
+                      subset = sl_ & log_sl_ & cos_ta_ & 
+                        (Elevation | Distance.to.Herbaceous | Distance.to.Shrub | 
+                           Distance.to.Water | Slope))
+
+female.exc.model.results <- as.data.frame(female.exc.dredge)
+female.exc.top = subset(female.exc.dredge, delta < 2) #extract competing models
+
+### Females Within Range ###
+female.natal.global = clogit(#response variable
+  case ~ 
+    #movement covariates
+    sl_ + log_sl_ + cos_ta_ +
+    #landscape covariates
+    Elevation + Distance.to.Herbaceous + Distance.to.Shrub + Distance.to.Water + Slope +
+    #stratum
+    strata(step_id_) + 
+    #cluster around individual
+    cluster(id),
+  method = "approximate", data=female.natal.df, model=TRUE)
+
+#testing all combinations of models while including movement covariates in every iteration
+
+options(na.action = 'na.fail')
+female.natal.dredge <- dredge(female.natal.global,
+                      subset = sl_ & log_sl_ & cos_ta_ & 
+                        (Elevation | Distance.to.Herbaceous | Distance.to.Shrub | 
+                           Distance.to.Water | Slope))
+
+female.natal.model.results <- as.data.frame(female.natal.dredge)
+female.natal.top = subset(female.natal.dredge, delta < 2) #extract competing models
 ##################################
-
-##################################
-# Model selection based on AIC
-##################################
-library(AICcmodavg)
-((out <- aictab(cand.set = mod.sel, modnames = Model.names, second.ord=F)))
