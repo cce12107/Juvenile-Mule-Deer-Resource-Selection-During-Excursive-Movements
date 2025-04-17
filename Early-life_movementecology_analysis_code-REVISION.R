@@ -1,4 +1,5 @@
 # Early-life movement ecology of a cervid: Implications for Chronic Wasting Disease Management Analysis Code
+# Ellis et al. 2025 in Ecological Solutions & Evidence
 # Calvin C. Ellis
 # 02/18/2025
 
